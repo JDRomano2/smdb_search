@@ -15,6 +15,7 @@ class SMDB_options
     options = OpenStruct.new()
     options.config = "/etc/my.cnf"
     options.search_fields = {}
+    options.show_predications = false
 
     opt_parser = OptionParser.new do |opts|
       opts.banner = "Usage: smdb_search.rb [options]"
@@ -34,6 +35,10 @@ class SMDB_options
 
       opts.on("--predicate [PREDICATE]", String, "A predicate that is indexed by SemMedDB") do |pred|
         options.search_fields[:predicate] = pred
+      end
+
+      opts.on("-p", "--show-predications", "Show predications that match concept and predicate") do |p|
+        options.show_predications = p
       end
 
       opts.on_tail("-h", "--help", "Show this message") do

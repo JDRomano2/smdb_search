@@ -20,6 +20,7 @@ class SMDB_search
   def initialize(options)
     @client = Mysql2::Client.new(:default_file => "/etc/my.cnf", :database => "kb_semanticmedline")
     @search_terms = options.search_fields
+    @show_predications_flag = options.show_predications
     determine_search_type
   end
 
@@ -41,6 +42,7 @@ class SMDB_search
     r = @client.query("SELECT * FROM CONCEPT WHERE CUI = \"#{@cui}\"")
     @concept_ids = []
     r.each { |x| @concept_ids.push(x["CONCEPT_ID"]) }
+    puts "Matching concept_id(s):"
     pp @concept_ids
 
     # get CONCEPT_SEMTYPE_IDs
@@ -49,6 +51,7 @@ class SMDB_search
       r = @client.query("SELECT * FROM CONCEPT_SEMTYPE WHERE CONCEPT_ID = \"#{cid}\"")
       r.each { |x| @concept_semtype_ids.push(x["CONCEPT_SEMTYPE_ID"]) }
     end
+    puts "Matching concept_semtype_id(s):"
     pp @concept_semtype_ids
 
     # get PREDICATION_IDs
@@ -58,7 +61,16 @@ class SMDB_search
       r = @client.query("SELECT * FROM PREDICATION_ARGUMENT WHERE CONCEPT_SEMTYPE_ID = \"#{csid}\"")
       r.each { |x| @predication_ids.push(x["PREDICATION_ID"]) }
     end
+    puts "Found #{@predication_ids.length} predication IDs for the concept."
     #pp @predication_ids
+    
+    # if '-p' flag was set, show the predications
+    if @show_predications_flag
+      @predication_ids.each do |pid_flag|
+        r = @client.query("SELECT * FROM PREDICATION WHERE PREDICATION_ID = \"#{pid_flag}\"")
+        r.each { |x| puts x }
+      end
+    end
 
     # for each predication_id, see if it uses the desired predicate
     puts "Searching for PREDICATIONs that match..."
@@ -72,7 +84,7 @@ class SMDB_search
     #pp @predication_ids_matching_predicate
 
     # get SENTENCE_PREDICATIONs matching these predication ids
-    puts "Found #{@predication_ids_matching_predicate.length()} matches."
+    puts "Found #{@predication_ids_matching_predicate.length()} matches for the predicate."
     puts "Searching for the sentences."
     @sentence_predications = []
     @predication_ids_matching_predicate.each do |match|
