@@ -52,14 +52,16 @@ class SMDB_search
     pp @concept_semtype_ids
 
     # get PREDICATION_IDs
+    puts "Searching for PREDICATION_ARGUMENTs..."
     @predication_ids = []
     @concept_semtype_ids.each do |csid|
       r = @client.query("SELECT * FROM PREDICATION_ARGUMENT WHERE CONCEPT_SEMTYPE_ID = \"#{csid}\"")
       r.each { |x| @predication_ids.push(x["PREDICATION_ID"]) }
     end
-    pp @predication_ids
+    #pp @predication_ids
 
     # for each predication_id, see if it uses the desired predicate
+    puts "Searching for PREDICATIONs that match..."
     @predication_ids_matching_predicate = []
     @predication_ids.each do |pid|
       r = @client.query("SELECT * FROM PREDICATION WHERE PREDICATION_ID = \"#{pid}\"")
@@ -67,7 +69,30 @@ class SMDB_search
         @predication_ids_matching_predicate.push(y["PREDICATION_ID"]) if y["PREDICATE"] == @predicate
       end
     end
-    pp @predication_ids_matching_predicate
+    #pp @predication_ids_matching_predicate
+
+    # get SENTENCE_PREDICATIONs matching these predication ids
+    puts "Found #{@predication_ids_matching_predicate.length()} matches."
+    puts "Searching for the sentences."
+    @sentence_predications = []
+    @predication_ids_matching_predicate.each do |match|
+      r = @client.query("SELECT * FROM SENTENCE_PREDICATION WHERE PREDICATION_ID = \"#{match}\"")
+      r.each do |y|
+        sentence_predication_hash = {}
+        sentence_predication_hash[:subject] = y["SUBJECT_TEXT"]
+        sentence_predication_hash[:predicate] = @predicate
+        sentence_predication_hash[:object] = y["OBJECT_TEXT"]
+        @sentence_predications.push(sentence_predication_hash)
+      end
+    end
+    #pp @sentence_predications
+
+    puts "========================"
+    puts "Things that are treated by the concept you entered:"
+    @things_it_treats = []
+    @sentence_predications.map { |p| @things_it_treats.push(p[:object]) }
+    @things_it_treats.uniq!
+    puts @things_it_treats
   end
 
 end
