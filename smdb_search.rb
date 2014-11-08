@@ -100,11 +100,11 @@ class SMDB_search
     #pp @sentence_predications
 
     puts "========================"
-    puts "Things that are treated by the concept you entered:"
-    @things_it_treats = []
-    @sentence_predications.map { |p| @things_it_treats.push(p[:object]) }
-    @things_it_treats.uniq!
-    puts @things_it_treats
+    puts "Predicate : Object matches for entered subject:"
+    @objects = []
+    @sentence_predications.map { |p| @objects.push("#{p[:subject]} #{p[:predicate]} #{p[:object]}") }
+    @objects.uniq!
+    puts @objects
   end
 
 end
