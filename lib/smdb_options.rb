@@ -16,6 +16,8 @@ class SMDB_options
     options.config = "/etc/my.cnf"
     options.search_fields = {}
     options.show_predications = false
+    options.verbose = false
+    options.suppress_output = false
 
     opt_parser = OptionParser.new do |opts|
       opts.banner = "Usage: smdb_search.rb [options]"
@@ -37,8 +39,20 @@ class SMDB_options
         options.search_fields[:predicate] = pred
       end
 
+      opts.on("--preferred-name [PREFERRED_NAME]", String, "The preferred name for a UMLS or GO concept") do |pref|
+        options.search_fields[:preferred_name] = pref
+      end
+
       opts.on("-p", "--show-predications", "Show predications that match concept and predicate") do |p|
         options.show_predications = p
+      end
+
+      opts.on("-v", "--verbose", "Give output of each MySQL query") do |v|
+        options.verbose = v
+      end
+
+      opts.on("-s", "--suppress-output", "Only the final results are printed to STDOUT - useful for piping output") do |s|
+        options.suppress_output = s
       end
 
       opts.on_tail("-h", "--help", "Show this message") do

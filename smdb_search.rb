@@ -21,6 +21,7 @@ class SMDB_search
     @client = Mysql2::Client.new(:default_file => "/etc/my.cnf", :database => "kb_semanticmedline")
     @search_terms = options.search_fields
     @show_predications_flag = options.show_predications
+    @verbose_flag = options.verbose
     determine_search_type
   end
 
@@ -28,13 +29,14 @@ class SMDB_search
     case
     when @search_terms.has_key?(:cui) && @search_terms.has_key?(:predicate)
       get_cui_predication_matches
+    when @search_terms.has_key?(:preferred_name) && @search_terms.has_key?(:predicate)
+      get_pref_predication_matches
     else
       puts "Error!"
     end
   end
 
   def get_cui_predication_matches
-    puts "we got here"
     @cui = @search_terms[:cui]
     @predicate = @search_terms[:predicate]
     
@@ -44,7 +46,23 @@ class SMDB_search
     r.each { |x| @concept_ids.push(x["CONCEPT_ID"]) }
     puts "Matching concept_id(s):"
     pp @concept_ids
+    self.concept_to_predication
+  end
 
+  def get_pref_predication_matches
+    @pref = @search_terms[:preferred_name]
+    @predicate = @search_terms[:predicate]
+    
+    # get CONCEPT_IDs
+    r = @client.query("SELECT * FROM CONCEPT WHERE PREFERRED_NAME = \"#{@pref}\"")
+    @concept_ids = []
+    r.each { |x| @concept_ids.push(x["CONCEPT_ID"]) }
+    puts "Matching concept_id(s):"
+    pp @concept_ids
+    self.concept_to_predication
+  end
+
+  def concept_to_predication
     # get CONCEPT_SEMTYPE_IDs
     @concept_semtype_ids = []
     @concept_ids.each do |cid|
