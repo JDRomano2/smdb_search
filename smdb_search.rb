@@ -11,6 +11,8 @@ require 'pp'
 
 #parse options
 options = SMDB_options.parse(ARGV)
+CONFIG_FILE = "/etc/my.cnf"
+DATABASE_NAME = "kb_semanticmedline"
 
 #pp options
 #pp ARGV
@@ -18,7 +20,7 @@ options = SMDB_options.parse(ARGV)
 class SMDB_search
 
   def initialize(options)
-    @client = Mysql2::Client.new(:default_file => "/etc/my.cnf", :database => "kb_semanticmedline")
+    @client = Mysql2::Client.new(:default_file => CONFIG_FILE, :database => DATABASE_NAME)
     @search_terms = options.search_fields
     @show_predications_flag = options.show_predications
     @verbose_flag = options.verbose
@@ -122,9 +124,11 @@ class SMDB_search
     puts "========================\n"
     puts "[Predicate : Object] matches for entered subject:\n"
     @objects = []
-    @sentence_predications.map { |p| @objects.push("#{p[:subject]}\t #{p[:predicate]}\t #{p[:object]}\t \{PMID: #{p[:pmid]}\}") }
+    #@sentence_predications.map { |p| @objects.push("#{p[:subject]}\t #{p[:predicate]}\t #{p[:object]}\t \{PMID: #{p[:pmid]}\}") }
+    @sentence_predications.map { |p| @objects.push(:subject => p[:subject], :predicate => p[:predicate], :object => p[:object], :pmid => p[:pmid]) } # I know there is a better way to do this section... Just lazy today.
     @objects.uniq!
-    puts @objects
+    printf("%14s %15s   %-30s %15s\n", "SUBJECT", "PREDICATE", "OBJECT", "PMID")
+    @objects.map { |o| printf("%15s %10s   %-35s %15s\n", o[:subject], o[:predicate], o[:object], "\{pmid: #{o[:pmid]}\}") }
   end
 
 end
