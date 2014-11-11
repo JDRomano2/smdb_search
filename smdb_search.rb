@@ -112,15 +112,17 @@ class SMDB_search
         sentence_predication_hash[:subject] = y["SUBJECT_TEXT"]
         sentence_predication_hash[:predicate] = @predicate
         sentence_predication_hash[:object] = y["OBJECT_TEXT"]
+        r1 = @client.query("SELECT * FROM SENTENCE WHERE SENTENCE_ID = \"#{y["SENTENCE_ID"]}\"")
+        sentence_predication_hash[:pmid] = r1.first["PMID"]
         @sentence_predications.push(sentence_predication_hash)
       end
     end
     #pp @sentence_predications
 
-    puts "========================"
-    puts "Predicate : Object matches for entered subject:"
+    puts "========================\n"
+    puts "[Predicate : Object] matches for entered subject:\n"
     @objects = []
-    @sentence_predications.map { |p| @objects.push("#{p[:subject]} #{p[:predicate]} #{p[:object]}") }
+    @sentence_predications.map { |p| @objects.push("#{p[:subject]}\t #{p[:predicate]}\t #{p[:object]}\t \{PMID: #{p[:pmid]}\}") }
     @objects.uniq!
     puts @objects
   end
