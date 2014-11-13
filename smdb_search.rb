@@ -127,8 +127,8 @@ class SMDB_search
     #@sentence_predications.map { |p| @objects.push("#{p[:subject]}\t #{p[:predicate]}\t #{p[:object]}\t \{PMID: #{p[:pmid]}\}") }
     @sentence_predications.map { |p| @objects.push(:subject => p[:subject], :predicate => p[:predicate], :object => p[:object], :pmid => p[:pmid]) } # I know there is a better way to do this section... Just lazy today.
     @objects.uniq!
-    printf("%14s %15s   %-30s %15s\n", "SUBJECT", "PREDICATE", "OBJECT", "PMID")
-    @objects.map { |o| printf("%15s %10s   %-35s %15s\n", o[:subject], o[:predicate], o[:object], "\{pmid: #{o[:pmid]}\}") }
+    printf("%24s %15s   %-40s %15s\n", "SUBJECT", "PREDICATE", "OBJECT", "PMID")
+    @objects.map { |o| printf("%25s %10s   %-45s %15s\n", o[:subject], o[:predicate], o[:object], "\{pmid: #{o[:pmid]}\}") }
   end
 
 end
