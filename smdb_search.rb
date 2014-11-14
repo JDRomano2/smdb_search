@@ -8,14 +8,12 @@ require 'mysql2'
 require 'optparse'
 require_relative 'lib/smdb_options.rb'
 require 'pp'
+require 'byebug'
 
 #parse options
 options = SMDB_options.parse(ARGV)
 CONFIG_FILE = "/etc/my.cnf"
 DATABASE_NAME = "kb_semanticmedline"
-
-#pp options
-#pp ARGV
 
 class SMDB_search
 
@@ -33,6 +31,8 @@ class SMDB_search
       get_cui_predication_matches
     when @search_terms.has_key?(:preferred_name) && @search_terms.has_key?(:predicate)
       get_pref_predication_matches
+    when @search_terms.has_key?(:pmid)
+      get_pmid_predications
     else
       puts "Error!"
     end
@@ -102,7 +102,10 @@ class SMDB_search
       end
     end
     #pp @predication_ids_matching_predicate
+    self.show_predications
+  end
 
+  def show_predications
     # get SENTENCE_PREDICATIONs matching these predication ids
     puts "Found #{@predication_ids_matching_predicate.length()} matches for the predicate."
     puts "Searching for the sentences."
@@ -125,6 +128,43 @@ class SMDB_search
     puts "[Predicate : Object] matches for entered subject:\n"
     @objects = []
     #@sentence_predications.map { |p| @objects.push("#{p[:subject]}\t #{p[:predicate]}\t #{p[:object]}\t \{PMID: #{p[:pmid]}\}") }
+    @sentence_predications.map { |p| @objects.push(:subject => p[:subject], :predicate => p[:predicate], :object => p[:object], :pmid => p[:pmid]) } # I know there is a better way to do this section... Just lazy today.
+    @objects.uniq!
+    printf("%24s %15s   %-40s %15s\n", "SUBJECT", "PREDICATE", "OBJECT", "PMID")
+    @objects.map { |o| printf("%25s %10s   %-45s %15s\n", o[:subject], o[:predicate], o[:object], "\{pmid: #{o[:pmid]}\}") }
+  end
+
+  def get_pmid_predications
+    @pmid = @search_terms[:pmid]
+
+    # get SENTENCE_IDs
+    puts "Finding sentences in MEDLINE title/abstract for the provided PMID - this may take a while..."
+    r = @client.query("SELECT * FROM SENTENCE WHERE PMID = #{@pmid}")
+    @sentence_ids = []
+    r.each { |sid| @sentence_ids.push(sid["SENTENCE_ID"]) }
+    puts "...done!"
+
+    @sentence_predications = []
+    @sentence_ids.each do |match|
+      r = @client.query("SELECT * FROM SENTENCE_PREDICATION WHERE SENTENCE_ID = #{match}")
+      r.each do |y|
+        sentence_predication_hash = {}
+        sentence_predication_hash[:subject] = y["SUBJECT_TEXT"]
+        @predication_id = y["PREDICATION_ID"]
+        r0 = @client.query("SELECT * FROM PREDICATION WHERE PREDICATION_ID = #{@predication_id}")
+        @predicate = r0.first["PREDICATE"]
+        sentence_predication_hash[:predicate] = @predicate
+        sentence_predication_hash[:object] = y["OBJECT_TEXT"]
+        r1 = @client.query("SELECT * FROM SENTENCE WHERE SENTENCE_ID = \"#{y["SENTENCE_ID"]}\"")
+        sentence_predication_hash[:pmid] = r1.first["PMID"]
+        @sentence_predications.push(sentence_predication_hash)
+      end
+    end
+
+    # print SENTENCE_PREDICATION details for each SENTENCE_ID
+    puts "========================\n"
+    puts "[Predicate : Object] matches for PMID:\n"
+    @objects = []
     @sentence_predications.map { |p| @objects.push(:subject => p[:subject], :predicate => p[:predicate], :object => p[:object], :pmid => p[:pmid]) } # I know there is a better way to do this section... Just lazy today.
     @objects.uniq!
     printf("%24s %15s   %-40s %15s\n", "SUBJECT", "PREDICATE", "OBJECT", "PMID")

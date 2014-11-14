@@ -43,6 +43,10 @@ class SMDB_options
         options.search_fields[:preferred_name] = pref
       end
 
+      opts.on("-m", "--pmid [PUBMED ID]", String, "The PMID for an article that you want to extract predications from.") do |m|
+        options.search_fields[:pmid] = m
+      end
+
       opts.on("-p", "--show-predications", "Show predications that match concept and predicate") do |p|
         options.show_predications = p
       end
