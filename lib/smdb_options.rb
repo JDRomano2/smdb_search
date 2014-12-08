@@ -47,6 +47,10 @@ class SMDB_options
         options.search_fields[:pmid] = m
       end
 
+      opts.on("-f", "--pmids-file [FILE]", String, "Path to a file containing a list of PMIDs. Will search for all predications in all PMIDs, returning a \"bag-of-words\" of concepts.") do |f|
+        options.search_fields[:pmids_file] = f
+      end
+
       opts.on("-p", "--show-predications", "Show predications that match concept and predicate") do |p|
         options.show_predications = p
       end
