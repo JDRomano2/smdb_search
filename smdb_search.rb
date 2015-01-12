@@ -28,9 +28,9 @@ class SMDB_search
 
   def determine_search_type
     case
-    when @search_terms.has_key?(:cui) && @search_terms.has_key?(:predicate)
+    when @search_terms.has_key?(:cui)
       get_cui_predication_matches
-    when @search_terms.has_key?(:preferred_name) && @search_terms.has_key?(:predicate)
+    when @search_terms.has_key?(:preferred_name)
       get_pref_predication_matches
     when @search_terms.has_key?(:pmid)
       get_pmid_predications(@search_terms[:pmid])
@@ -101,7 +101,11 @@ class SMDB_search
     @predication_ids.each do |pid|
       r = @client.query("SELECT * FROM PREDICATION WHERE PREDICATION_ID = \"#{pid}\"")
       r.each do |y|
-        @predication_ids_matching_predicate.push(y["PREDICATION_ID"]) if y["PREDICATE"] == @predicate
+        unless @predicate == nil
+          @predication_ids_matching_predicate.push(y["PREDICATION_ID"]) if y["PREDICATE"] == @predicate
+        else
+          @predication_ids_matching_predicate.push(y["PREDICATION_ID"])
+        end
       end
     end
     #pp @predication_ids_matching_predicate

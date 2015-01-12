@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/5353/JDRomano2/smdb_search.svg)](http://dx.doi.org/10.5281/zenodo.13901)
+
     Usage: smdb_search.rb [options]
     
     Specific options:
